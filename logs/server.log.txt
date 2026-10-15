@@ -1,0 +1,90 @@
+========================================
+  MUSIC SERVICE - server.log.txt
+  Список сервисов и API проекта
+========================================
+
+1. ZAYCEV.NET
+   - Поиск треков: https://zaycev.net/api/external/pages/search/tracks
+   - Поиск артистов: https://zaycev.net/api/external/pages/search/artists
+   - Хеши для скачивания: https://zaycev.net/api/external/track/filezmeta (POST)
+   - Потоковая ссылка: https://zaycev.net/api/external/track/play/{hash}
+   - Скачивание: https://zaycev.net/api/external/track/download/{hash}
+   - Треки артиста: https://zaycev.net/api/external/pages/artist/{id}/tracks
+   - Инфо артиста: https://zaycev.net/api/external/pages/artist/{id}
+   - Новые треки: https://zaycev.net/api/external/pages/new
+   - Жанры: https://zaycev.net/api/external/pages/genres/{genre}/tracks
+
+2. HITMO (ru.hitmoz.org)
+   - Поиск: https://ru.hitmoz.org/search?q=
+   - Артист: https://ru.hitmoz.org/artist/{id}
+   - Жанры: https://ru.hitmoz.org/genre/{genre}
+   - Новые: https://ru.hitmoz.org/songs/new
+   - Главная: https://ru.hitmoz.org/
+
+3. MUZOFOND.FM
+   - Артисты: https://muzofond.fm/collections/artists/{slug}
+   - Популярное: https://muzofond.fm/popular/{genre}
+
+4. ЛОКАЛЬНЫЕ СЕРВЕРЫ
+   - Express.js: http://localhost:3000
+   - Статика: /public
+   - Кэш: /cache/music
+   - Прокси: /api/proxy
+
+5. API ENDPOINTS
+   - GET  /api/search?q=         - Объединённый поиск (Zaycev + Hitmo + Muzofond)
+   - GET  /api/artist?id=        - Треки артиста (Zaycev)
+   - GET  /api/hitmo-artist?id=  - Треки артиста (Hitmo)
+   - GET  /api/muzofond-artist?name= - Треки артиста (Muzofond)
+   - GET  /api/genres            - Список жанров
+   - GET  /api/genre-tracks?genre= - Треки жанра (Zaycev + Hitmo + Muzofond)
+   - GET  /api/new               - Новые треки (Zaycev + Hitmo + Muzofond)
+   - GET  /api/sections          - Секции главной страницы
+   - GET  /api/recommended       - Рекомендации на основе вкуса
+   - GET  /api/stream-url?hash=  - Получение URL потока (Zaycev)
+   - GET  /api/proxy?url=        - Прокси MP3 (обход CORS)
+   - GET  /api/download          - Скачивание и кэширование
+   - GET  /api/cache-list        - Список кэшированных файлов
+   - DELETE /api/cache-delete    - Удаление из кэша
+   - POST /api/auto-cache-toggle - Автосохранение
+
+6. ИЗБРАННОЕ
+   - GET    /api/favorites           - Все избранные
+   - POST   /api/favorites           - Добавить
+   - DELETE /api/favorites/:trackId  - Удалить
+
+7. ИЗБРАННЫЕ АРТИСТЫ
+   - GET    /api/favorite-artists           - Все
+   - POST   /api/favorite-artists           - Добавить
+   - DELETE /api/favorite-artists/:artistId - Удалить
+
+8. ПЛЕЙЛИСТЫ
+   - GET    /api/playlists           - Все плейлисты
+   - POST   /api/playlists           - Создать
+   - DELETE /api/playlists/:id       - Удалить
+   - GET    /api/playlists/:id/tracks - Треки плейлиста
+   - POST   /api/playlists/:id/tracks - Добавить трек
+   - DELETE /api/playlists/:id/tracks/:trackId - Удалить трек
+
+9. НАСТРОЙКИ
+   - GET  /api/settings   - Все настройки
+   - POST /api/settings   - Сохранить настройку
+
+10. ИСТОРИЯ
+    - GET  /api/history           - Все записи
+    - POST /api/history           - Добавить прослушивание
+
+11. БАЗА ДАННЫХ
+    - SQLite (sql.js) - файл: db/music.db
+    - Таблицы: favorites, playlists, playlist_tracks,
+      listening_history, settings, favorite_artists
+
+12. ЗАВИСИМОСТИ (package.json)
+    - express ^4.18.2
+    - axios ^1.6.0
+    - cheerio ^1.0.0-rc.12
+    - sql.js ^1.14.1
+    
+1. ZAYCEV.NET
+2. HITMO (ru.hitmoz.org)
+3. MUZOFOND.FM

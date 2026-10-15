@@ -1,0 +1,18 @@
+{
+  "port": 3000,
+  "cacheDir": "./cache/music",
+  "logsDir": "./logs",
+  "logsEnabled": false,
+  "autoCache": false,
+  "theme": "dark",
+  "language": "ru",
+  "maxSearchResults": 35,
+  "maxRecommendedTracks": 150,
+  "proxyTimeout": 120000,
+  "requestTimeout": 15000,
+  "sources": {
+    "zaycev": true,
+    "hitmo": true,
+    "muzofond": true
+  }
+}

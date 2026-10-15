@@ -1,0 +1,426 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MusicX</title>
+  <link rel="icon" type="image/svg+xml" href="Music.svg">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <div class="app">
+    <!-- Sidebar -->
+    <aside class="sidebar">
+      <div class="sidebar-logo">
+        <img src="Music.svg" alt="" width="200" height="200">
+        <!-- <span class="logo-text">MusicX</span> -->
+      </div>
+
+      <nav class="sidebar-nav">
+        <a class="nav-item active" data-page="search" onclick="switchPage('search')">
+          <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+          <span data-i18n="nav_search">Search</span>
+        </a>
+        <a class="nav-item" data-page="new" onclick="switchPage('new')">
+          <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>
+          <span data-i18n="nav_new">New Music</span>
+        </a>
+        <a class="nav-item" data-page="genres" onclick="switchPage('genres')">
+          <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>
+          <span data-i18n="nav_genres">Genres</span>
+        </a>
+        <a class="nav-item" data-page="recommended" onclick="switchPage('recommended')">
+          <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+          <span data-i18n="nav_recommended">For You</span>
+        </a>
+
+        <div class="nav-divider"></div>
+        <div class="nav-section" data-i18n="nav_library">Library</div>
+
+        <a class="nav-item" data-page="favorites" onclick="switchPage('favorites')">
+          <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+          <span data-i18n="nav_favorites">Favorites</span>
+        </a>
+        <a class="nav-item" data-page="fav-artists" onclick="switchPage('fav-artists')">
+          <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+          <span data-i18n="nav_fav_artists">Artists</span>
+        </a>
+        <a class="nav-item" data-page="playlists" onclick="switchPage('playlists')">
+          <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
+          <span data-i18n="nav_playlists">Playlists</span>
+        </a>
+        <a class="nav-item" data-page="cache" onclick="switchPage('cache')">
+          <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          <span data-i18n="nav_downloads">Downloads</span>
+        </a>
+
+        <div class="nav-divider"></div>
+
+        <a class="nav-item" data-page="settings" onclick="switchPage('settings')">
+          <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+          <span data-i18n="nav_settings">Settings</span>
+        </a>
+      </nav>
+
+      <div class="sidebar-footer">
+        <div class="sidebar-footer-text">MusicX</div>
+      </div>
+    </aside>
+
+    <!-- Main content -->
+    <main class="main">
+      <!-- Top bar -->
+      <div class="topbar">
+        <button id="btnBurger" class="burger-btn" onclick="toggleSidebar()" title="Menu">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+        </button>
+        <button id="btnBack" class="back-btn-topbar hidden" onclick="goBack()" title="Back">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18"><polyline points="15 18 9 12 15 6"/></svg>
+        </button>
+        <div class="topbar-search" id="searchBar">
+          <svg class="topbar-search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+          <input type="text" id="searchInput" placeholder="Search songs, artists..." autocomplete="off">
+          <button class="topbar-voice-btn" id="btnVoice" onclick="startVoiceSearch()" title="Voice search">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>
+          </button>
+          <button class="topbar-search-btn" onclick="doSearch()" title="Search">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+          </button>
+          <div class="search-suggestions hidden" id="searchSuggestions"></div>
+        </div>
+        <div class="topbar-status" id="status"></div>
+      </div>
+
+      <!-- Pages -->
+      <div class="content">
+        <!-- Search page (home) -->
+        <div id="page-search" class="page">
+          <div id="homeContent">
+            <div id="artistResults" class="artist-grid hidden"></div>
+            <div id="searchResults" class="track-list hidden"></div>
+          </div>
+          <div id="homeSections"></div>
+        </div>
+
+        <!-- New page -->
+        <div id="page-new" class="page hidden">
+          <h2 class="page-heading">New Music</h2>
+          <div id="newList" class="track-list"></div>
+          <div id="newPager" class="pager hidden">
+            <button class="pager-btn" id="newPrev">Prev</button>
+            <span id="newPageInfo" class="pager-info"></span>
+            <button class="pager-btn" id="newNext">Next</button>
+          </div>
+        </div>
+
+        <!-- Genres page -->
+        <div id="page-genres" class="page hidden">
+          <div id="genreGrid" class="genre-grid"></div>
+          <div id="genreTracks" class="hidden">
+            <button class="back-btn" id="genreBack">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><polyline points="15 18 9 12 15 6"/></svg>
+              Genres
+            </button>
+            <h2 id="genreTitle" class="page-heading"></h2>
+            <div id="genreTrackList" class="track-list"></div>
+            <div id="genrePager" class="pager hidden">
+              <button class="pager-btn" id="genrePrev">Prev</button>
+              <span id="genrePageInfo" class="pager-info"></span>
+              <button class="pager-btn" id="genreNext">Next</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Cache page -->
+        <div id="page-cache" class="page hidden">
+          <h2 class="page-heading" data-i18n="downloads">Downloads</h2>
+          <div id="cacheList" class="track-list"></div>
+          <div class="empty-state" id="cacheEmpty">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" width="48" height="48"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+            <p data-i18n="empty_downloads">No downloads yet</p>
+          </div>
+        </div>
+
+        <!-- Favorites page -->
+        <div id="page-favorites" class="page hidden">
+          <h2 class="page-heading" data-i18n="favorites">Favorites</h2>
+          <div id="favoritesList" class="track-list"></div>
+          <div class="empty-state" id="favoritesEmpty">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" width="48" height="48"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+            <p data-i18n="empty_favorites">No favorites yet</p>
+            <span data-i18n="empty_favorites_hint">Tap the heart on any track</span>
+          </div>
+        </div>
+
+        <!-- Favorite Artists page -->
+        <div id="page-fav-artists" class="page hidden">
+          <div class="playlists-header">
+            <h2 class="page-heading" data-i18n="fav_artists">Favorite Artists</h2>
+            <button class="play-all-btn" id="btnPlayAllMyArtists" onclick="playAllMyArtists()" style="display:none">
+              &#9654; <span data-i18n="play_all_my_artists">Play All My Artists</span>
+            </button>
+          </div>
+          <div id="favArtistsGrid" class="artist-grid"></div>
+          <div id="favArtistsList" class="track-list hidden"></div>
+          <div class="empty-state" id="favArtistsEmpty">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" width="48" height="48"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+            <p data-i18n="empty_fav_artists">No favorite artists yet</p>
+            <span data-i18n="empty_fav_artists_hint">Tap the heart on any artist</span>
+          </div>
+        </div>
+
+        <!-- Playlists page -->
+        <div id="page-playlists" class="page hidden">
+          <div class="playlists-header">
+            <h2 class="page-heading" data-i18n="playlists">Playlists</h2>
+            <button class="create-playlist-btn" onclick="createPlaylist()">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><path d="M12 5v14M5 12h14"/></svg>
+              <span data-i18n="new_playlist">New Playlist</span>
+            </button>
+          </div>
+          <div id="playlistsGrid" class="playlists-grid"></div>
+          <div id="playlistDetail" class="hidden">
+            <div class="playlist-detail-header">
+              <button class="back-btn" onclick="showPlaylistsGrid()">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><polyline points="15 18 9 12 15 6"/></svg>
+                <span data-i18n="back">Back</span>
+              </button>
+              <h2 id="playlistDetailTitle" class="page-heading"></h2>
+              <button class="playlist-delete" onclick="deleteCurrentPlaylist()" title="Delete playlist">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+              </button>
+            </div>
+            <div id="playlistTrackList" class="track-list"></div>
+          </div>
+          <div class="empty-state" id="playlistsEmpty">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" width="48" height="48"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
+            <p data-i18n="empty_playlists">No playlists yet</p>
+            <span data-i18n="empty_playlists_hint">Create your first playlist</span>
+          </div>
+        </div>
+
+        <!-- Recommended page -->
+        <div id="page-recommended" class="page hidden">
+          <h2 class="page-heading" data-i18n="recommended">You Might Like</h2>
+          <div id="recommendedList" class="track-list"></div>
+          <div class="empty-state" id="recommendedEmpty">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" width="48" height="48"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+            <p data-i18n="empty_recommended">Listen to more music</p>
+            <span data-i18n="empty_recommended_hint">We will suggest tracks based on your taste</span>
+          </div>
+        </div>
+
+        <!-- Settings page -->
+        <div id="page-settings" class="page hidden">
+          <h2 class="page-heading" data-i18n="settings">Settings</h2>
+          <div class="settings-list">
+            <div class="settings-group">
+              <h3 class="settings-group-title" data-i18n="settings_appearance">Appearance</h3>
+              <div class="settings-row">
+                <span data-i18n="settings_theme">Theme</span>
+                <div class="toggle-group">
+                  <button class="toggle-btn active" id="themeDark" onclick="setTheme('dark')" data-i18n="theme_dark">Dark</button>
+                  <button class="toggle-btn" id="themeLight" onclick="setTheme('light')" data-i18n="theme_light">Light</button>
+                </div>
+              </div>
+              <div class="settings-row">
+                <span data-i18n="settings_view">Track list view</span>
+                <div class="toggle-group">
+                  <button class="toggle-btn active" id="viewList" onclick="setViewMode('list')">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
+                    <span data-i18n="view_list">List</span>
+                  </button>
+                  <button class="toggle-btn" id="viewTiles" onclick="setViewMode('tiles')">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
+                    <span data-i18n="view_tiles">Tiles</span>
+                  </button>
+                </div>
+              </div>
+            </div>
+            <div class="settings-group">
+              <h3 class="settings-group-title" data-i18n="settings_language">Language</h3>
+              <div class="settings-row">
+                <span data-i18n="settings_lang">Interface language</span>
+                <div class="toggle-group">
+                  <button class="toggle-btn active" id="langEn" onclick="setLang('en')">English</button>
+                  <button class="toggle-btn" id="langRu" onclick="setLang('ru')">Русский</button>
+                </div>
+              </div>
+            </div>
+            <div class="settings-group">
+              <h3 class="settings-group-title" data-i18n="settings_storage">Storage</h3>
+              <div class="settings-row">
+                <span data-i18n="settings_autocache">Auto-cache listened tracks</span>
+                <label class="switch">
+                  <input type="checkbox" id="autoCacheToggle" onchange="toggleAutoCache()">
+                  <span class="slider"></span>
+                </label>
+              </div>
+            </div>
+            <div class="settings-group">
+              <h3 class="settings-group-title" data-i18n="settings_advanced">Advanced</h3>
+              <div class="settings-row">
+                <span data-i18n="settings_logs">Write logs</span>
+                <label class="switch">
+                  <input type="checkbox" id="logsToggle" onchange="toggleLogs()">
+                  <span class="slider"></span>
+                </label>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <!-- Player bar -->
+  <div id="playerBar" class="player-bar hidden">
+    <div class="player-inner">
+      <div class="player-left">
+        <img id="playerCover" class="player-cover" src="/Music.svg" alt="">
+        <div class="player-meta">
+          <div id="playerTitle" class="player-title">--</div>
+          <div id="playerArtist" class="player-artist">--</div>
+        </div>
+        <button id="btnFavPlayer" class="player-icon-btn" title="Favorite" onclick="toggleFavoriteCurrent()">
+          <svg id="iconFav" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+        </button>
+        <button id="btnAddPlaylist" class="player-icon-btn" title="Add to playlist" onclick="showAddToPlaylist()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        </button>
+      </div>
+
+      <div class="player-center">
+        <div class="player-buttons">
+          <button id="btnLoop" class="player-icon-btn" title="Loop playlist">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18"><polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg>
+          </button>
+          <button id="btnTrackLoop" class="player-icon-btn" title="Repeat track">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18"><polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/><text x="12" y="15" text-anchor="middle" font-size="8" fill="currentColor" stroke="none" font-weight="bold">1</text></svg>
+          </button>
+          <button id="btnPrev" class="player-icon-btn" title="Previous track">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20"><polygon points="19 20 9 12 19 4 19 20"/><line x1="5" y1="19" x2="5" y2="5"/></svg>
+          </button>
+          <button id="btnPlayPause" class="player-play-btn" title="Play">
+            <svg id="iconPlay" viewBox="0 0 24 24" fill="currentColor" width="22" height="22"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+            <svg id="iconPause" viewBox="0 0 24 24" fill="currentColor" width="22" height="22" class="hidden"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>
+          </button>
+          <button id="btnNext" class="player-icon-btn" title="Next track">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20"><polygon points="5 4 15 12 5 20 5 4"/><line x1="19" y1="5" x2="19" y2="19"/></svg>
+          </button>
+          <button id="btnCachePlayer" class="player-icon-btn" title="Download">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          </button>
+        </div>
+        <div class="player-progress">
+          <span id="playerTime" class="player-time">0:00</span>
+          <div id="progressBar" class="progress-bar">
+            <div id="progressFill" class="progress-fill"></div>
+          </div>
+          <span id="playerDuration" class="player-time">0:00</span>
+        </div>
+      </div>
+
+      <div class="player-right">
+        <button class="player-icon-btn volume-icon" id="btnMute" onclick="toggleMute()" title="Mute">
+          <svg id="iconVol" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/></svg>
+          <svg id="iconMute" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16" class="hidden"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><line x1="23" y1="9" x2="17" y2="15"/><line x1="17" y1="9" x2="23" y2="15"/></svg>
+        </button>
+        <div class="volume-bar" id="volumeBar">
+          <div class="volume-fill" id="volumeFill" style="width:80%"></div>
+          <div class="volume-thumb" id="volumeThumb" style="left:80%"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="player-progress-mobile">
+      <div id="progressBarMobile" class="progress-bar">
+        <div id="progressFillMobile" class="progress-fill"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal -->
+  <div id="modal" class="modal hidden" onclick="if(event.target===this)closeModal()">
+    <div class="modal-content">
+      <div class="modal-header">
+        <span id="modalTitle" class="modal-title"></span>
+        <button class="modal-close" onclick="closeModal()">X</button>
+      </div>
+      <div id="modalBody" class="modal-body"></div>
+    </div>
+  </div>
+
+  <audio id="player"></audio>
+
+  <!-- Mobile overlay -->
+  <div id="mobileOverlay" class="mobile-overlay" onclick="closeSidebar()"></div>
+
+  <!-- Mobile expanded player -->
+  <div id="mobilePlayerFull" class="mobile-player-full">
+    <div class="mpf-top">
+      <button class="mpf-close" onclick="closeMobilePlayer()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20"><polyline points="6 9 12 15 18 9"/></svg>
+      </button>
+      <span class="mpf-label">Now Playing</span>
+      <div style="width:36px"></div>
+    </div>
+    <img id="mpfCover" class="mpf-cover" src="/Music.svg" alt="">
+    <div class="mpf-info">
+      <div id="mpfTitle" class="mpf-title">--</div>
+      <div id="mpfArtist" class="mpf-artist">--</div>
+    </div>
+    <div class="mpf-actions">
+      <button id="mpfFav" onclick="toggleFavoriteCurrent()" title="Favorite">
+        <svg id="mpfIconFav" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="22" height="22"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+      </button>
+      <button id="mpfAddPl" onclick="showAddToPlaylist()" title="Add to playlist">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="22" height="22"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+      </button>
+      <button id="mpfCache" onclick="cacheCurrent()" title="Download">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="22" height="22"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+      </button>
+    </div>
+    <div class="mpf-progress">
+      <span id="mpfTime" class="mpf-time">0:00</span>
+      <div id="mpfProgressBar" class="progress-bar" onclick="seekMobilePlayer(event)">
+        <div id="mpfProgressFill" class="progress-fill"></div>
+      </div>
+      <span id="mpfDuration" class="mpf-time">0:00</span>
+    </div>
+    <div class="mpf-buttons">
+      <button class="mpf-skip" onclick="playPrev()" title="Previous">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="32" height="32"><polygon points="19 20 9 12 19 4 19 20"/><line x1="5" y1="19" x2="5" y2="5"/></svg>
+      </button>
+      <button id="mpfPlayPause" class="mpf-play" onclick="togglePlay()">
+        <svg id="mpfIconPlay" viewBox="0 0 24 24" fill="currentColor" width="28" height="28"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+        <svg id="mpfIconPause" viewBox="0 0 24 24" fill="currentColor" width="28" height="28" class="hidden"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>
+      </button>
+      <button class="mpf-skip" onclick="playNext()" title="Next">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="32" height="32"><polygon points="5 4 15 12 5 20 5 4"/><line x1="19" y1="5" x2="19" y2="19"/></svg>
+      </button>
+    </div>
+    <div class="mpf-extra">
+      <button id="mpfLoop" onclick="toggleLoop()" title="Loop playlist">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20"><polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg>
+      </button>
+      <button id="mpfTrackLoop" onclick="toggleTrackLoop()" title="Repeat track">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20"><polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/><text x="12" y="15" text-anchor="middle" font-size="8" fill="currentColor" stroke="none" font-weight="bold">1</text></svg>
+      </button>
+    </div>
+  </div>
+
+  <!-- Debug panel -->
+  <div id="debugPanel" class="debug-panel hidden">
+    <div class="debug-header">
+      <span class="debug-title">Console</span>
+      <button class="debug-action" onclick="clearDebug()">Clear</button>
+      <button class="debug-action debug-close" onclick="toggleDebug()">X</button>
+    </div>
+    <div id="debugLog" class="debug-log"></div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
