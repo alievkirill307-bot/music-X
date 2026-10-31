@@ -1,0 +1,30 @@
+NON-COMMERCIAL COPYLEFT LICENSE (Version 1.0)
+
+Copyright (c) <2026> <𝒦𝒾𝓇𝒾𝓁𝓁 𝒜𝓁𝒾𝑒𝓋 /MusicX>
+
+This license (hereinafter referred to as the “License”) applies to the software and accompanying documentation (hereinafter referred to as the “Program”), the owner of which is the person specified above.
+
+1. GRANT OF RIGHTS
+
+1.1. You are permitted to use, copy, modify, and distribute the Program subject to all terms and conditions of this License.
+
+1.2. You may distribute the Program (in source or binary form) exclusively on a gratuitous basis. You are not entitled to charge for copies of the Program, for access to them, or for their distribution. The prohibition applies to the sale, licensing, rental, or any other remunerated provision of the Program to third parties.
+
+2. OPEN SOURCE CODE (COPYLEFT)
+
+2.1. Any distribution of the Program in object or executable code must be accompanied by the complete corresponding source code. You are required to provide the source code on the same medium or ensure its free access via a publicly available link.
+
+2.2. If you modify the Program and distribute the modified version  (“Derivative Work”), you are required to distribute such Derivative Work under the terms of this License. You cannot make a Derivative work proprietary or distribute it under terms that prohibit opening the source code.
+
+3. NOTICES
+
+3.1. You are required to retain all copyright notices and the text of this LICENSE in all copies or substantial portions of the Program.
+
+4. DISCLAIMER OF WARRANTIES
+
+THE PROGRAM IS PROVIDED "AS IS", WITHOUT ANY GUARANTEES, EXPRESS OR IMPLIED.
+IMPLIED, INCLUDING, BUT NOT LIMITED TO, WARRANTIES OF MERCHANTABILITY
+SUITABILITY, COMPLIANCE WITH A SPECIFIC PURPOSE AND ABSENCE OF VIOLATIONS
+right. NEITHER THE AUTHOR NOR THE COPYRIGHT HOLDER IS RESPONSIBLE FOR ANY
+CLAIMS, DAMAGES OR OTHER CLAIMS ARISING FROM THE USE OF THE PROGRAM
+OR IN CONNECTION WITH IT.
