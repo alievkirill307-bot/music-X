@@ -1,6 +1,6 @@
 NON-COMMERCIAL COPYLEFT LICENSE (Version 1.0)
 
-Copyright (c) <2026> <𝒦𝒾𝓇𝒾𝓁𝓁 𝒜𝓁𝒾𝑒𝓋 /MusicX>
+Copyright (c) <2026> <𝒦𝒾𝓇𝒾𝓁𝓁 𝒜𝓁𝒾𝑒𝓋 / MusicX>
 
 This license (hereinafter referred to as the “License”) applies to the software and accompanying documentation (hereinafter referred to as the “Program”), the owner of which is the person specified above.
 
