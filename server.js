@@ -45,6 +45,21 @@ app.use('/api/playlists', require('./routes/playlists'));
 app.use('/api/settings', require('./routes/settings'));
 app.use('/api/history', require('./routes/history'));
 
+// === Hitmo mirrors ===
+// Список зеркал по порядку: первое — основное, остальные — резерв.
+// Резерв включается только если предыдущее не ответило; результаты не смешиваются.
+// Переключить вручную: поменять порядок в config.json ("hitmoMirrors") и перезапустить,
+// либо на ходу — POST /api/hitmo-mirror { "index": 1 }.
+const HITMO_MIRROR_LIST = Array.isArray(config.hitmoMirrors) && config.hitmoMirrors.length
+  ? config.hitmoMirrors
+  : [config.hitmoBase || 'https://ruz.hitmoz.org', config.hitmoFallbackBase || ''];
+const HITMO_BASES = HITMO_MIRROR_LIST
+  .map(b => String(b || '').trim().replace(/\/+$/, '')).filter(Boolean);
+const HITMO_BASE = HITMO_BASES[0];
+const HITMO_PRIMARY_RETRY = 10 * 60 * 1000;
+let hitmoBaseIdx = 0;
+let hitmoPrimaryRetryAt = 0;
+
 // === Headers ===
 const Z_HEADERS = {
   'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
@@ -64,6 +79,117 @@ const M_HEADERS = {
   'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
   'Accept-Language': 'ru-RU,ru;q=0.9',
 };
+
+function preferredHitmoIdx() {
+  return (hitmoBaseIdx !== 0 && Date.now() < hitmoPrimaryRetryAt) ? hitmoBaseIdx : 0;
+}
+
+// Запрос к Hitmo с автоматическим переходом на резервное зеркало.
+// Возвращает { data, base, idx } — base нужен, чтобы собрать относительные ссылки на MP3.
+// forcedIdx — обратиться строго к конкретному зеркалу (ID артистов и жанров у них разные).
+async function hitmoGet(path, opts = {}, forcedIdx = null) {
+  const { headers = H_HEADERS, timeout = 15000, params, ...rest } = opts;
+  const forced = Number.isInteger(forcedIdx);
+  const order = forced
+    ? [forcedIdx]
+    : HITMO_BASES.map((_, n) => (preferredHitmoIdx() + n) % HITMO_BASES.length);
+  let lastErr;
+
+  for (const idx of order) {
+    const base = HITMO_BASES[idx];
+    try {
+      const r = await axios.get(base + path, { headers, timeout, params, ...rest });
+      if (!forced) {
+        if (idx !== hitmoBaseIdx) log(`[Hitmo] Using mirror: ${base}`);
+        hitmoBaseIdx = idx;
+        hitmoPrimaryRetryAt = idx === 0 ? 0 : Date.now() + HITMO_PRIMARY_RETRY;
+      }
+      return { data: r.data, base, idx };
+    } catch (e) {
+      lastErr = e;
+      if (!forced && idx === 0) hitmoPrimaryRetryAt = Date.now() + HITMO_PRIMARY_RETRY;
+      if (HITMO_BASES.length > 1) log(`[Hitmo] ${base} failed (${e.message}), trying next mirror`);
+    }
+  }
+
+  throw lastErr;
+}
+
+function hitmoBaseFor(url) {
+  const direct = HITMO_BASES.find(b => url.startsWith(b));
+  if (direct) return direct;
+  if (/\.hitmos\.fm\//i.test(url)) {
+    return HITMO_BASES.find(b => /\.hitmos\.fm/i.test(b)) || HITMO_BASE;
+  }
+  return HITMO_BASE;
+}
+
+// У зеркал разные пространства ID артистов, поэтому в ответе храним номер
+// зеркала вместе с id: "1:7293267". Фронтенд считает id просто строкой.
+function hitmoArtistRef(idx, raw) { return raw ? `${idx}:${raw}` : ''; }
+function parseHitmoArtistRef(id) {
+  const m = String(id || '').match(/^(\d+):(.+)$/);
+  if (m) return { idx: Number(m[1]), raw: m[2] };
+  return { idx: 0, raw: String(id || '') };
+}
+
+// Жанры: у зеркал разные числовые ID, поэтому ищем по названию в /genres (с кешем).
+const HITMO_GENRE_ALIASES = {
+  pop: ['поп'], rock: ['рок'], rap: ['рэп', 'хип-хоп'], electronic: ['электро', 'electro'],
+  shanson: ['шансон'], metal: ['метал', 'metal'], classical: ['классик'],
+  dance: ['танцевальн'], easy: ['лёгк', 'лаунж'], rnb: ['r&b', "r'n'b", 'рнб'],
+  jazz: ['джаз'], reggae: ['регги'], blues: ['блюз'], folk: ['фолк', 'авторск'],
+  indie: ['инди'], instrumental: ['инструментальн', 'без слов'], world: ['мир', 'world'],
+  children: ['детск', 'для детей'], soundtrack: ['саундтрек', 'из фильм'], other: ['другое'],
+};
+const hitmoGenreCache = new Map();
+
+function normGenreName(s) {
+  return String(s).toLowerCase().replace(/ё/g, 'е')
+    .replace(/[^a-zа-я0-9&'\s]/gi, ' ').replace(/\s+/g, ' ').trim();
+}
+
+async function hitmoGenreList(base) {
+  const cached = hitmoGenreCache.get(base);
+  if (cached && Date.now() - cached.at < 6 * 60 * 60 * 1000) return cached.list;
+
+  const r = await axios.get(base + '/genres', { headers: H_HEADERS, timeout: 15000 });
+  const $ = cheerio.load(r.data);
+  const list = [];
+  $('a[href^="/genre/"]').each((_, el) => {
+    const id = (($(el).attr('href') || '').match(/\/genre\/(\d+)/) || [])[1];
+    const name = $(el).text().replace(/\s+/g, ' ').replace(/\s*\d[\d\s]*\s*треков.*$/i, '').trim();
+    if (id && name) list.push({ id, name });
+  });
+  hitmoGenreCache.set(base, { at: Date.now(), list });
+  return list;
+}
+
+async function hitmoGenreId(base, genre) {
+  const aliases = (HITMO_GENRE_ALIASES[genre] || [genre]).map(normGenreName).filter(Boolean);
+  if (!aliases.length) return null;
+  const list = await hitmoGenreList(base);
+  for (const alias of aliases) {
+    const hit = list.find(g => normGenreName(g.name).includes(alias));
+    if (hit) return hit.id;
+  }
+  return null;
+}
+
+async function fetchHitmoGenre(genre) {
+  const start = preferredHitmoIdx();
+  for (let n = 0; n < HITMO_BASES.length; n++) {
+    const idx = (start + n) % HITMO_BASES.length;
+    try {
+      const gid = await hitmoGenreId(HITMO_BASES[idx], genre);
+      if (!gid) continue;
+      const r = await hitmoGet('/genre/' + gid, { timeout: 15000 }, idx);
+      const tracks = parseHitmoTracks(r.data, r.base).slice(0, 20);
+      if (tracks.length) return tracks;
+    } catch {}
+  }
+  return [];
+}
 
 function sanitize(s) { return s.replace(/[<>:"/\\|?*\n\r]/g, '_').replace(/\s+/g, '_').substring(0, 80); }
 function mkFile(title, artist) { return sanitize(`${artist}_${title}`) + '.mp3'; }
@@ -126,7 +252,20 @@ function mapZTracks(trackIds, info, hashes) {
 // ========================================
 // HITMO helpers
 // ========================================
-function parseHitmoTracks(html) {
+// Зеркала бывают двух поколений: старый HTML (data-musmeta) и новый Next.js,
+// где данные треков лежат JSON-ом внутри страницы. Парсер определяет сам.
+function parseHitmoTracks(html, base = HITMO_BASE) {
+  const tracks = parseHitmoTracksHtml(html, base);
+  if (tracks.length) return tracks;
+  return parseHitmoTracksNext(html);
+}
+
+function fmtDur(sec) {
+  const s = Math.max(0, Number(sec) || 0);
+  return String(Math.floor(s / 60)).padStart(2, '0') + ':' + String(s % 60).padStart(2, '0');
+}
+
+function parseHitmoTracksHtml(html, base) {
   const $ = cheerio.load(html);
   const tracks = [];
 
@@ -144,7 +283,7 @@ function parseHitmoTracks(html) {
         cover: meta.img || '',
         duration: fullTime,
         durationSec: parseDur(fullTime),
-        mp3: dlLink ? (dlLink.startsWith('//') ? 'https:' + dlLink : 'https://ru.hitmoz.org' + dlLink) : '',
+        mp3: dlLink ? (dlLink.startsWith('//') ? 'https:' + dlLink : base + dlLink) : '',
         streamingUrl: meta.url || '',
       });
     } catch {}
@@ -153,9 +292,44 @@ function parseHitmoTracks(html) {
   return tracks;
 }
 
-function parseHitmoArtists(html) {
+function parseHitmoTracksNext(html) {
+  const raw = String(html).replace(/\\"/g, '"');
+  const re = /\{[^{}]*?"play":"(https:[^"]+)"[^{}]*?\}/g;
+  const tracks = [];
+  const seen = new Set();
+  let m;
+
+  while ((m = re.exec(raw)) !== null) {
+    let o;
+    try { o = JSON.parse(m[0]); } catch { continue; }
+    if (!o || !o.play || !o.title || !o.artist) continue;
+
+    const key = (o.artist + ' ' + o.title).toLowerCase();
+    if (seen.has(key)) continue;
+    seen.add(key);
+
+    const sec = Number(o.duration) || 0;
+    tracks.push({
+      id: 'h_' + (o.id || key.replace(/\s+/g, '_')),
+      source: 'hitmo',
+      title: o.title,
+      artist: o.artist,
+      cover: o.image || '',
+      duration: sec ? fmtDur(sec) : '',
+      durationSec: sec,
+      mp3: o.download || o.play,
+      streamingUrl: o.play,
+      artistId: o.artistId ? String(o.artistId) : '',
+    });
+  }
+
+  return tracks;
+}
+
+function parseHitmoArtists(html, idx = 0) {
   const $ = cheerio.load(html);
   const artists = [];
+  const seen = new Set();
 
   $('li.album-item').each((_, el) => {
     const link = $(el).find('a.album-link');
@@ -166,9 +340,25 @@ function parseHitmoArtists(html) {
     const image = imgMatch ? (imgMatch[1].startsWith('//') ? 'https:' + imgMatch[1] : imgMatch[1]) : '';
     const idMatch = href.match(/\/artist\/(\d+)/);
 
-    if (idMatch && name) {
-      artists.push({ id: idMatch[1], name, image, trackCount: 0 });
+    if (idMatch && name && !seen.has(idMatch[1])) {
+      seen.add(idMatch[1]);
+      artists.push({ id: hitmoArtistRef(idx, idMatch[1]), name, image, trackCount: 0 });
     }
+  });
+
+  return artists;
+}
+
+// Новое поколение не отдаёт карточки артистов разметкой — собираем их из треков.
+function hitmoArtistsFromTracks(tracks, idx = 0) {
+  const artists = [];
+  const seen = new Set();
+
+  tracks.forEach(t => {
+    if (!t.artistId || !t.artist) return;
+    if (seen.has(t.artistId)) return;
+    seen.add(t.artistId);
+    artists.push({ id: hitmoArtistRef(idx, t.artistId), name: t.artist, image: t.cover || '', trackCount: 0 });
   });
 
   return artists;
@@ -304,9 +494,10 @@ app.get('/api/search', async (req, res) => {
       // Hitmo
       (async () => {
         try {
-          const r = await axios.get('https://ru.hitmoz.org/search', { params: { q }, headers: H_HEADERS, timeout: REQ_TIMEOUT });
-          const tracks = parseHitmoTracks(r.data);
-          const artists = parseHitmoArtists(r.data).map(a => ({ ...a, source: 'hitmo' }));
+          const r = await hitmoGet('/search', { params: { q }, timeout: REQ_TIMEOUT });
+          const tracks = parseHitmoTracks(r.data, r.base);
+          const fromHtml = parseHitmoArtists(r.data, r.idx);
+          const artists = (fromHtml.length ? fromHtml : hitmoArtistsFromTracks(tracks, r.idx)).map(a => ({ ...a, source: 'hitmo' }));
           return { tracks: tracks.slice(0, SEARCH_LIMIT), artists };
         } catch (e) { log('[Search] Hitmo error:', e.message); return { tracks: [], artists: [] }; }
       })(),
@@ -406,17 +597,44 @@ app.get('/api/hitmo-artist', async (req, res) => {
     if (!id) return res.status(400).json({ error: 'id required' });
     log(`[HitmoArtist] ID: ${id}`);
 
-    const r = await axios.get('https://ru.hitmoz.org/artist/' + id, { headers: H_HEADERS, timeout: 15000 });
+    const { idx, raw } = parseHitmoArtistRef(id);
+    log(`[HitmoArtist] ID: ${id} (mirror ${idx})`);
+
+    const r = await hitmoGet('/artist/' + raw, { timeout: 15000 }, idx);
     const $ = cheerio.load(r.data);
 
-    const name = $('h1.p-info-title, h1.p-track-title').first().text().trim() || '';
-    const tracks = parseHitmoTracks(r.data);
+    const rawName = $('h1.p-info-title, h1.p-track-title').first().text() || $('h1').first().text() || '';
+    const name = String(rawName).replace(/\s+/g, ' ').trim().replace(/\s*-\s*слушать( все песни)?.*$/i, '');
+    const tracks = parseHitmoTracks(r.data, r.base);
 
     res.json({ artist: { id, name }, tracks });
   } catch (e) {
     console.error('[HitmoArtist] Error:', e.message);
     res.status(500).json({ error: e.message });
   }
+});
+
+// ========================================
+// API: Зеркала Hitmo (просмотр и ручное переключение)
+// ========================================
+app.get('/api/hitmo-mirrors', (req, res) => {
+  res.json({
+    active: hitmoBaseIdx,
+    preferred: preferredHitmoIdx(),
+    retryPrimaryAt: hitmoPrimaryRetryAt,
+    mirrors: HITMO_BASES.map((base, index) => ({ index, base, active: index === hitmoBaseIdx })),
+  });
+});
+
+app.post('/api/hitmo-mirror', (req, res) => {
+  const index = Number(req.body && req.body.index);
+  if (!Number.isInteger(index) || !HITMO_BASES[index]) {
+    return res.status(400).json({ error: 'bad index', mirrors: HITMO_BASES.map((b, i) => ({ index: i, base: b })) });
+  }
+  hitmoBaseIdx = index;
+  hitmoPrimaryRetryAt = index === 0 ? 0 : Date.now() + HITMO_PRIMARY_RETRY;
+  log(`[Hitmo] Manual switch to mirror #${index}: ${HITMO_BASES[index]}`);
+  res.json({ active: index, base: HITMO_BASES[index] });
 });
 
 // ========================================
@@ -507,7 +725,6 @@ app.get('/api/genre-tracks', async (req, res) => {
     if (!genre) return res.status(400).json({ error: 'genre required' });
     log(`[Genre] ${genre}, page: ${page}`);
 
-    const hitmoGenreMap = { pop:'pop-music', rock:'rock', rap:'rap', electronic:'electronic', shanson:'chanson', metal:'metal', classical:'classic', dance:'dance', easy:'relax', rnb:'rnb', jazz:'jazz', reggae:'reggae', blues:'blues', folk:'folk', indie:'indie', instrumental:'instrumental', world:'world', children:'children', soundtrack:'soundtrack', other:'other' };
     const muzofondGenreMap = { pop:'pop', rock:'rock', rap:'rap', electronic:'electronic', shanson:'chanson', metal:'metal', classical:'classic', dance:'dance', easy:'relax', rnb:'rnb', jazz:'jazz', reggae:'reggae', blues:'blues', folk:'folk', indie:'indie', instrumental:'instrumental', world:'world', children:'children', soundtrack:'soundtrack', other:'other' };
 
     const [zResult, hResult, mResult] = await Promise.all([
@@ -524,9 +741,7 @@ app.get('/api/genre-tracks', async (req, res) => {
       })(),
       (async () => {
         try {
-          const hGenre = hitmoGenreMap[genre] || genre;
-          const r = await axios.get('https://ru.hitmoz.org/genre/' + hGenre, { headers: H_HEADERS, timeout: 15000 });
-          return { tracks: parseHitmoTracks(r.data).slice(0, 20) };
+          return { tracks: (await fetchHitmoGenre(genre)).slice(0, 20) };
         } catch { return { tracks: [] }; }
       })(),
       (async () => {
@@ -572,8 +787,8 @@ app.get('/api/new', async (req, res) => {
       })(),
       (async () => {
         try {
-          const r = await axios.get('https://ru.hitmoz.org/songs/new', { headers: H_HEADERS, timeout: 15000 });
-          return { tracks: parseHitmoTracks(r.data).slice(0, 25) };
+          const r = await hitmoGet('/songs/new', { timeout: 15000 });
+          return { tracks: parseHitmoTracks(r.data, r.base).slice(0, 25) };
         } catch { return { tracks: [] }; }
       })(),
       (async () => {
@@ -610,11 +825,17 @@ async function fetchZaycevPage(page, limit) {
   } catch { return []; }
 }
 
-async function fetchHitmo(url) {
+async function fetchHitmo(path) {
   try {
-    const r = await axios.get(url, { headers: H_HEADERS, timeout: 15000 });
-    return parseHitmoTracks(r.data).slice(0, 20);
+    const r = await hitmoGet(path, { timeout: 15000 });
+    return parseHitmoTracks(r.data, r.base).slice(0, 20);
   } catch { return []; }
+}
+
+// На новом поколении главная отдаётся без треков — подменяем новинками.
+async function fetchHitmoHome() {
+  const tracks = await fetchHitmo('/');
+  return tracks.length ? tracks : fetchHitmo('/songs/new');
 }
 
 async function fetchMuzofond(slug) {
@@ -630,20 +851,20 @@ app.get('/api/sections', async (req, res) => {
 
     const [freshZ, freshH, freshM, hitsZ, popularH, popularM, rockH, rockM, rapH, rapM, popH, popM, electroH, electroM, danceH, danceM] = await Promise.all([
       fetchZaycevPage(1, 12),
-      fetchHitmo('https://ru.hitmoz.org/songs/new'),
+      fetchHitmo('/songs/new'),
       fetchMuzofond('new'),
       fetchZaycevPage(2, 12),
-      fetchHitmo('https://ru.hitmoz.org/'),
+      fetchHitmoHome(),
       fetchMuzofond('pop'),
-      fetchHitmo('https://ru.hitmoz.org/genre/rock'),
+      fetchHitmoGenre('rock'),
       fetchMuzofond('rock'),
-      fetchHitmo('https://ru.hitmoz.org/genre/rap'),
+      fetchHitmoGenre('rap'),
       fetchMuzofond('rap'),
-      fetchHitmo('https://ru.hitmoz.org/genre/pop-music'),
+      fetchHitmoGenre('pop'),
       fetchMuzofond('pop'),
-      fetchHitmo('https://ru.hitmoz.org/genre/electronic'),
+      fetchHitmoGenre('electronic'),
       fetchMuzofond('electronic'),
-      fetchHitmo('https://ru.hitmoz.org/genre/dance'),
+      fetchHitmoGenre('dance'),
       fetchMuzofond('dance'),
     ]);
 
@@ -687,7 +908,7 @@ app.get('/api/proxy', async (req, res) => {
   try {
     const { url } = req.query;
     if (!url) return res.status(400).json({ error: 'url required' });
-    let referer = 'https://ru.hitmoz.org/';
+    let referer = hitmoBaseFor(url) + '/';
     if (url.includes('muzofond.fm') || url.includes('mp3poisk.net')) referer = 'https://muzofond.fm/';
     else if (url.includes('zaycev.net') || url.includes('cdnimg.zaycev.net')) referer = 'https://zaycev.net/';
     const r = await axios({
@@ -722,7 +943,7 @@ app.get('/api/download', async (req, res) => {
     const alreadyCached = fs.existsSync(filePath);
 
     if (!alreadyCached) {
-      const referer = source === 'hitmo' ? 'https://ru.hitmoz.org/' : source === 'muzofond' ? 'https://muzofond.fm/' : 'https://zaycev.net/';
+      const referer = source === 'hitmo' ? hitmoBaseFor(url) + '/' : source === 'muzofond' ? 'https://muzofond.fm/' : 'https://zaycev.net/';
       const r = await axios({ method: 'GET', url, responseType: 'stream', timeout: 120000, headers: { 'User-Agent': H_HEADERS['User-Agent'], Referer: referer } });
       const w = fs.createWriteStream(filePath);
       r.data.pipe(w);
@@ -843,10 +1064,8 @@ app.get('/api/recommended', async (req, res) => {
 
       const hitmoResults = await Promise.all(topQueries.slice(0, 8).map(async (q) => {
         try {
-          const r = await axios.get('https://ru.hitmoz.org/search', {
-            params: { q }, headers: H_HEADERS, timeout: 10000,
-          });
-          return parseHitmoTracks(r.data).slice(0, 10);
+          const r = await hitmoGet('/search', { params: { q }, timeout: 10000 });
+          return parseHitmoTracks(r.data, r.base).slice(0, 10);
         } catch { return []; }
       }));
       hitmoResults.forEach(t => results.push(...t));
@@ -871,7 +1090,7 @@ app.get('/api/recommended', async (req, res) => {
       results.push(...extra);
     }
 
-    const hitmoNew = await fetchHitmo('https://ru.hitmoz.org/songs/new');
+    const hitmoNew = await fetchHitmo('/songs/new');
     results.push(...hitmoNew.slice(0, 20));
 
     const muzofondNew = await (async () => {
